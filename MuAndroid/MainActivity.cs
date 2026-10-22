@@ -10,6 +10,7 @@ using Client.Data.Texture;
 using Client.Main;
 using Client.Main.Content;
 using Client.Main.Controls.UI;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using AndroidGameActivity = Microsoft.Xna.Framework.AndroidGameActivity;
@@ -198,6 +199,7 @@ namespace MuAndroid
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+            MuGame.ConfigureAdditionalLogging = logging => logging.AddProvider(new AndroidFileLoggerProvider());
             Constants.SETTINGS_PATH = EnsureAndroidConfig();
             TextFieldControl.ControlType = typeof(AndroidTextFieldControl);
 

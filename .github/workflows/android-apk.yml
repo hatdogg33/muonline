@@ -44,6 +44,11 @@ jobs:
           -o publish-android
           -p:AndroidSdkDirectory=$env:ANDROID_SDK_ROOT
           -p:AcceptAndroidSdkLicenses=true
+          -p:AndroidKeyStore=true
+          -p:AndroidSigningKeyStore=$env:GITHUB_WORKSPACE/.ci/mu.keystore
+          -p:AndroidSigningKeyAlias=mu
+          -p:AndroidSigningKeyPass=mu123456
+          -p:AndroidSigningStorePass=mu123456
 
       - name: Package APK
         run: Compress-Archive -Path publish-android\*.apk -DestinationPath muonline-android.zip

@@ -63,6 +63,7 @@ namespace Client.Main
         public static Random Random { get; } = new Random();
         public static IConfiguration AppConfiguration { get; private set; }
         public static ILoggerFactory AppLoggerFactory { get; private set; }
+        public static Action<ILoggingBuilder> ConfigureAdditionalLogging { get; set; }
         public static MuOnlineSettings AppSettings { get; private set; }
         public static NetworkManager Network { get; private set; }
         public static string ConfigDirectory { get; private set; }
@@ -74,6 +75,7 @@ namespace Client.Main
         private readonly GraphicsDeviceManager _graphics;
         private ILogger _logger = AppLoggerFactory?.CreateLogger<MuGame>();
         private bool _networkDisposed = false;
+        private DateTime _lastHeartbeatUtc = DateTime.MinValue;
         private float _scaleFactor;
         private bool _effectCacheValid = false;
         private Point _lastEffectTargetSize;
@@ -298,6 +300,7 @@ namespace Client.Main
                     AppConfiguration.GetSection("Logging:SimpleConsole").Bind(options);
                     options.IncludeScopes = true; // Optional: Include scopes if you use them
                 });
+                ConfigureAdditionalLogging?.Invoke(builder);
             });
 
             _logger = AppLoggerFactory.CreateLogger<MuGame>();
@@ -417,6 +420,16 @@ namespace Client.Main
             {
                 GameTime = gameTime;
                 FrameIndex++;
+                if (DateTime.UtcNow - _lastHeartbeatUtc > TimeSpan.FromSeconds(5))
+                {
+                    _lastHeartbeatUtc = DateTime.UtcNow;
+                    _logger?.LogInformation(
+                        "Heartbeat: scene={Scene}, state={State}, ups={Ups}",
+                        ActiveScene?.GetType().Name ?? "null",
+                        Network?.CurrentState.ToString() ?? "null",
+                        UPSCounter.Instance.UPS);
+                }
+
                 UpdateInputInfo(gameTime);
                 CheckShaderToggles();
                 SunCycleManager.Update();
