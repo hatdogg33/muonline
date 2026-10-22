@@ -3,6 +3,7 @@ using Client.Data.MAP;
 using Client.Data.OBJS;
 using Client.Data.OZB;
 using Client.Main.Content;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace Client.Main.Controls.Terrain
         private readonly short _worldIndex;
         private readonly TerrainData _terrainData;
         private bool _replaceTextureMapping;
+        private static readonly ILogger _logger = MuGame.AppLoggerFactory?.CreateLogger<TerrainLoader>();
 
         public TerrainLoader(short worldIndex)
         {
@@ -56,8 +58,14 @@ namespace Client.Main.Controls.Terrain
             var worldFolder = $"World{_worldIndex}";
             var fullPathWorldFolder = Path.Combine(Constants.DataPath, worldFolder);
 
+            _logger?.LogInformation("TerrainLoader: DataPath={DataPath}, folder={Folder}, exists={Exists}",
+                Constants.DataPath, fullPathWorldFolder, Directory.Exists(fullPathWorldFolder));
+
             if (string.IsNullOrEmpty(fullPathWorldFolder) || !Directory.Exists(fullPathWorldFolder))
+            {
+                _logger?.LogError("TerrainLoader: world folder missing: {Folder}", fullPathWorldFolder);
                 return null;
+            }
 
             // Load terrain .att
             string attPath = GetActualPath(Path.Combine(fullPathWorldFolder, $"EncTerrain{_worldIndex}.att"));
@@ -114,7 +122,18 @@ namespace Client.Main.Controls.Terrain
                 _terrainData.LightData = Enumerable.Repeat(Microsoft.Xna.Framework.Color.White, Constants.TERRAIN_SIZE * Constants.TERRAIN_SIZE).ToArray();
             }
 
-            await Task.WhenAll(tasks);
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "TerrainLoader: task failure for {Folder}", fullPathWorldFolder);
+                throw;
+            }
+
+            _logger?.LogInformation("TerrainLoader: loaded {Folder} (att={Att}, height={Height}, map={Map}, light={Light})",
+                fullPathWorldFolder, attPath, heightPath, mapPath, textureLightPath);
 
             _terrainData.GrassWind = new float[Constants.TERRAIN_SIZE * Constants.TERRAIN_SIZE];
 

@@ -2,6 +2,7 @@ using Client.Data.ATT;
 using Client.Data.MAP;
 using Client.Main.Controls.Terrain;
 using Client.Main.Graphics;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,6 +17,8 @@ namespace Client.Main.Controls
     /// </summary>
     public class TerrainControl : GameControl
     {
+        private readonly ILogger _logger;
+
         // --- Sub-systems ---
         private TerrainData _data;
         private TerrainLoader _loader;
@@ -53,7 +56,17 @@ namespace Client.Main.Controls
         public float WaterSpeed { get => _renderer.WaterSpeed; set => _renderer.WaterSpeed = value; }
         public float DistortionAmplitude { get => _renderer.DistortionAmplitude; set => _renderer.DistortionAmplitude = value; }
         public float DistortionFrequency { get => _renderer.DistortionFrequency; set => _renderer.DistortionFrequency = value; }
-        public float AmbientLight { get => _renderer.AmbientLight; set => _renderer.AmbientLight = value; }
+        public float AmbientLight
+        {
+            get => _renderer?.AmbientLight ?? 1f;
+            set
+            {
+                if (_renderer != null)
+                    _renderer.AmbientLight = value;
+            }
+        }
+
+        public bool IsRendererReady => _renderer != null;
         public float GrassBrightness { get => _grassRenderer.GrassBrightness; set => _grassRenderer.GrassBrightness = value; }
         public Vector2 WaterFlowDirection { get => _renderer.WaterFlowDirection; set => _renderer.WaterFlowDirection = value; }
         public HashSet<byte> GrassTextureIndices => _grassRenderer.GrassTextureIndices;
@@ -95,6 +108,7 @@ namespace Client.Main.Controls
 
         public TerrainControl()
         {
+            _logger = MuGame.AppLoggerFactory?.CreateLogger<TerrainControl>();
             AutoViewSize = false;
             ViewSize = new Point(MuGame.Instance.Width, MuGame.Instance.Height);
         }
@@ -112,8 +126,11 @@ namespace Client.Main.Controls
             _pendingTextureMap.Clear();
             _replaceTextureMapping = false;
 
+            _logger?.LogInformation("TerrainControl: world {WorldIndex} data={HasData}", WorldIndex, _data != null);
+
             if (_data == null)
             {
+                _logger?.LogError("TerrainControl: no terrain data for world {WorldIndex}", WorldIndex);
                 Status = Models.GameControlStatus.Error;
                 return;
             }

@@ -97,6 +97,10 @@ namespace Client.Main.Scenes
             // Sound & UI checks are 70% to 90% (0.7 to 0.9 progress)
 
             DisableDayNightCycleForScene();
+            _logger.LogInformation("LoginScene: DataPath={DataPath}, exists={Exists}, World95={World95}",
+                Constants.DataPath,
+                System.IO.Directory.Exists(Constants.DataPath),
+                System.IO.Directory.Exists(System.IO.Path.Combine(Constants.DataPath, "World95")));
             progressCallback?.Invoke("Initializing Network Manager...", 0.05f);
             _networkManager = MuGame.Network ?? throw new InvalidOperationException("NetworkManager not initialized in MuGame");
             SubscribeToNetworkEvents();
@@ -112,10 +116,18 @@ namespace Client.Main.Scenes
             await loginWorld.Initialize();
             World = loginWorld;
 
+            _logger.LogInformation("LoginScene: login world initialized. status={Status}, terrainRendererReady={Ready}",
+                loginWorld.Status, loginWorld.Terrain?.IsRendererReady);
+
             progressCallback?.Invoke("Login World Loaded.", 0.70f);
 
             if (loginWorld.Terrain != null)
             {
+                if (!loginWorld.Terrain.IsRendererReady)
+                {
+                    _logger.LogWarning("LoginScene: terrain renderer is not ready; world will render without terrain.");
+                }
+
                 loginWorld.Terrain.AmbientLight = 0.2f;
             }
 

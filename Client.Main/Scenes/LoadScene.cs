@@ -6,6 +6,7 @@ using Client.Main.Helpers;
 using Client.Main.Models;
 using Client.Main.Worlds;
 using Microsoft.Xna.Framework;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Buffers;
@@ -239,6 +240,13 @@ namespace Client.Main.Scenes
                 {
                     await DownloadAndExtractAssetsAsync(localZip, extractPath, ct);
                 }
+
+                var world95Path = Path.Combine(extractPath, "World95");
+                var logger = MuGame.AppLoggerFactory?.CreateLogger<LoadScene>();
+                logger?.LogInformation("LoadScene: DataPath={Path}, World95={Exists}, World95Files={Count}, Interface={InterfaceExists}",
+                    extractPath, Directory.Exists(world95Path),
+                    Directory.Exists(world95Path) ? Directory.EnumerateFiles(world95Path).Count() : -1,
+                    Directory.Exists(Path.Combine(extractPath, "Interface")));
 
                 await GateDataManager.Instance.LoadData();
                 await SkillDatabase.Initialize();

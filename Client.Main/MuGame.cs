@@ -25,6 +25,8 @@ namespace Client.Main
 {
     public class MuGame : Game
     {
+        private int _drawErrorCount;
+
         private const string LocalSettingsFileName = "appsettings.local.json";
         // Static Fields
         private static Controllers.TaskScheduler _taskScheduler;
@@ -518,7 +520,10 @@ namespace Client.Main
             }
             catch (Exception e)
             {
-                _logger?.LogDebug(e, "Exception in MuGame");
+                if (System.Threading.Interlocked.Increment(ref _drawErrorCount) <= 5)
+                    _logger?.LogError(e, "Exception in MuGame.Draw");
+                else
+                    _logger?.LogDebug(e, "Exception in MuGame.Draw");
             }
             finally
             {

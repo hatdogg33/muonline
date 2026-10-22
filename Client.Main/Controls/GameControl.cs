@@ -132,7 +132,7 @@ namespace Client.Main.Controls
             }
             catch (Exception e)
             {
-                _logger?.LogDebug(e, "Exception in GameControl");
+                _logger?.LogError(e, "Exception initializing control {Control}: {Message}", GetType().Name, e.Message);
                 Status = GameControlStatus.Error;
             }
         }
