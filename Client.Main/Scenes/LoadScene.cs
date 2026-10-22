@@ -26,6 +26,7 @@ namespace Client.Main.Scenes
 {
     public class LoadScene : BaseScene
     {
+        private const string ExtractionMarkerFileName = ".extraction_complete";
         #region Constants & Configuration
 
         // Download tuning - balanced for all platforms
@@ -240,6 +241,8 @@ namespace Client.Main.Scenes
                 {
                     await DownloadAndExtractAssetsAsync(localZip, extractPath, ct);
                 }
+
+                File.WriteAllText(Path.Combine(extractPath, ExtractionMarkerFileName), DateTime.UtcNow.ToString("o"));
 
                 var world95Path = Path.Combine(extractPath, "World95");
                 var logger = MuGame.AppLoggerFactory?.CreateLogger<LoadScene>();
@@ -749,6 +752,7 @@ namespace Client.Main.Scenes
                     catch (Exception ex)
                     {
                         Debug.WriteLine($"[Extract] Failed: {entry.Name} - {ex.Message}");
+                        throw new InvalidOperationException($"Extraction failed for '{entry.FullName}': {ex.Message}", ex);
                     }
 
                     processed++;
@@ -804,8 +808,13 @@ namespace Client.Main.Scenes
         {
             try
             {
-                return Directory.EnumerateFileSystemEntries(dataPath)
-                    .Any(e => !e.EndsWith("Data.zip", StringComparison.OrdinalIgnoreCase));
+                if (!File.Exists(Path.Combine(dataPath, ExtractionMarkerFileName)))
+                    return false;
+
+                var heightMapPath = Path.Combine(dataPath, "World95", "TerrainHeight.OZB");
+                var interfacePath = Path.Combine(dataPath, "Interface", "server_deco_all.OZT");
+                return File.Exists(heightMapPath) && new FileInfo(heightMapPath).Length > 0 &&
+                       File.Exists(interfacePath) && new FileInfo(interfacePath).Length > 0;
             }
             catch { return false; }
         }

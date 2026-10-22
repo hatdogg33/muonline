@@ -53,9 +53,23 @@ namespace Client.Main.Controls
             }
         }
 
-        public float WaterSpeed { get => _renderer.WaterSpeed; set => _renderer.WaterSpeed = value; }
-        public float DistortionAmplitude { get => _renderer.DistortionAmplitude; set => _renderer.DistortionAmplitude = value; }
-        public float DistortionFrequency { get => _renderer.DistortionFrequency; set => _renderer.DistortionFrequency = value; }
+        public float WaterSpeed
+        {
+            get => _renderer?.WaterSpeed ?? 1f;
+            set { if (_renderer != null) _renderer.WaterSpeed = value; }
+        }
+
+        public float DistortionAmplitude
+        {
+            get => _renderer?.DistortionAmplitude ?? 0f;
+            set { if (_renderer != null) _renderer.DistortionAmplitude = value; }
+        }
+
+        public float DistortionFrequency
+        {
+            get => _renderer?.DistortionFrequency ?? 0f;
+            set { if (_renderer != null) _renderer.DistortionFrequency = value; }
+        }
         public float AmbientLight
         {
             get => _renderer?.AmbientLight ?? 1f;
@@ -67,9 +81,19 @@ namespace Client.Main.Controls
         }
 
         public bool IsRendererReady => _renderer != null;
-        public float GrassBrightness { get => _grassRenderer.GrassBrightness; set => _grassRenderer.GrassBrightness = value; }
-        public Vector2 WaterFlowDirection { get => _renderer.WaterFlowDirection; set => _renderer.WaterFlowDirection = value; }
-        public HashSet<byte> GrassTextureIndices => _grassRenderer.GrassTextureIndices;
+        public float GrassBrightness
+        {
+            get => _grassRenderer?.GrassBrightness ?? 1f;
+            set { if (_grassRenderer != null) _grassRenderer.GrassBrightness = value; }
+        }
+
+        public Vector2 WaterFlowDirection
+        {
+            get => _renderer?.WaterFlowDirection ?? Vector2.UnitY;
+            set { if (_renderer != null) _renderer.WaterFlowDirection = value; }
+        }
+
+        public HashSet<byte> GrassTextureIndices => _grassRenderer?.GrassTextureIndices;
         public bool IsGpuTerrainLighting => _renderer?.IsGpuLightingActive == true;
         public bool IsDynamicLightingShaderAvailable => _renderer?.IsDynamicLightingShaderAvailable == true;
 
@@ -81,6 +105,9 @@ namespace Client.Main.Controls
         /// <param name="textureIndices">Valid texture indices for grass rendering (default: {0})</param>
         public void ConfigureGrass(float brightness = 1f, params byte[] textureIndices)
         {
+            if (_grassRenderer == null)
+                return;
+
             var oldBrightness = _grassRenderer.GrassBrightness;
             _grassRenderer.GrassBrightness = brightness;
 
