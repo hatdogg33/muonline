@@ -5,7 +5,7 @@ on:
 
 jobs:
   apk:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,16 +21,11 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Install Android SDK packages
-        run: |
-          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
-          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$SDK/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" \
-            "platforms;android-36" \
-            "build-tools;35.0.0" \
-            "ndk;27.2.12479018"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0 ndk;27.2.12479018'
+          accept-android-sdk-licenses: true
 
       - name: Install workload and tools
         run: |
@@ -40,21 +35,22 @@ jobs:
       - name: Build APK
         run: >
           dotnet build MuAndroid/MuAndroid.csproj -c Release -f net10.0-android
-          -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
-          -p:JavaSdkDirectory="$JAVA_HOME"
+          -p:AndroidSdkDirectory=$env:ANDROID_SDK_ROOT
           -p:AcceptAndroidSdkLicenses=true
 
       - name: Publish APK
         run: >
           dotnet publish MuAndroid/MuAndroid.csproj -c Release -f net10.0-android
           -o publish-android
-          -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
-          -p:JavaSdkDirectory="$JAVA_HOME"
+          -p:AndroidSdkDirectory=$env:ANDROID_SDK_ROOT
           -p:AcceptAndroidSdkLicenses=true
+
+      - name: Package APK
+        run: Compress-Archive -Path publish-android\*.apk -DestinationPath muonline-android.zip
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: mu-android-apk
           if-no-files-found: error
-          path: publish-android/*.apk
+          path: muonline-android.zip
