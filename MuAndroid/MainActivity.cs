@@ -13,6 +13,7 @@ using Client.Main.Controls.UI;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Linq;
 using AndroidGameActivity = Microsoft.Xna.Framework.AndroidGameActivity;
 
 namespace MuAndroid
@@ -196,9 +197,37 @@ namespace MuAndroid
             Constants.FOV_SCALE = 0.8f;
         }
 
+        private static string GetSharedDataPath()
+        {
+            try
+            {
+                var mediaDirs = Application.Context.GetExternalMediaDirs();
+                var mediaDir = mediaDirs?.FirstOrDefault()?.AbsolutePath;
+                if (!string.IsNullOrEmpty(mediaDir) &&
+                    Directory.Exists(Path.Combine(mediaDir, "World95")))
+                {
+                    return mediaDir;
+                }
+            }
+            catch (Exception ex)
+            {
+                Android.Util.Log.Warn("MuAndroid", "Shared data path check failed: " + ex.Message);
+            }
+
+            return null;
+        }
+
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            var sharedDataPath = GetSharedDataPath();
+            if (sharedDataPath != null)
+            {
+                Constants.DataPath = sharedDataPath;
+                Android.Util.Log.Info("MuAndroid", $"Using shared data path: {sharedDataPath}");
+            }
+
             MuGame.ConfigureAdditionalLogging = logging => logging.AddProvider(new AndroidFileLoggerProvider());
             Constants.SETTINGS_PATH = EnsureAndroidConfig();
             TextFieldControl.ControlType = typeof(AndroidTextFieldControl);
@@ -256,7 +285,8 @@ namespace MuAndroid
                               $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
                               $"Android Version: {Build.VERSION.SdkInt}\n" +
                               $"Device: {Build.Manufacturer} {Build.Model}\n" +
-                              $"Screen: {ScreenWidth}x{ScreenHeight}\n";
+                              $"Screen: {ScreenWidth}x{ScreenHeight}\n" +
+                              $"DataPath: {Client.Main.Constants.DataPath}\n";
                 SaveCrashLog(startMsg);
 
                 _game = new Client.Main.MuGame();
