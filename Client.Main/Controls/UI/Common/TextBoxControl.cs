@@ -45,6 +45,12 @@ namespace Client.Main.Controls.UI.Common
         public new int BorderThickness { get; set; } = 1;
         public new int Padding { get; set; } = 8;
 
+        /// <summary>
+        /// Platform hook invoked when the box is clicked/focused. Used on Android
+        /// to show the native soft-keyboard input dialog.
+        /// </summary>
+        public static Action<TextBoxControl> FocusRequested;
+
         public TextBoxControl()
         {
             Interactive = true;
@@ -172,6 +178,7 @@ namespace Client.Main.Controls.UI.Common
             _isFocused = true;
             _cursorVisible = true;
             _cursorBlinkTimer = 0;
+            FocusRequested?.Invoke(this);
             return base.OnClick();
         }
 

@@ -231,6 +231,7 @@ namespace MuAndroid
             MuGame.ConfigureAdditionalLogging = logging => logging.AddProvider(new AndroidFileLoggerProvider());
             Constants.SETTINGS_PATH = EnsureAndroidConfig();
             TextFieldControl.ControlType = typeof(AndroidTextFieldControl);
+            Client.Main.Controls.UI.Common.TextBoxControl.FocusRequested = AndroidTextBoxInput.Show;
 
             ApplyAndroidDefaults();
             Instance = this;
