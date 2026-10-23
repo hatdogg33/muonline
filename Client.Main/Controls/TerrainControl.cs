@@ -190,18 +190,32 @@ namespace Client.Main.Controls
             await base.Load();
         }
 
+        private static int _diagUpdateFrames;
+        private static int _diagDrawFrames;
+
         public override void Update(GameTime time)
         {
+            bool diag = _diagUpdateFrames < 3;
+            if (diag) _logger?.LogInformation("DIAG TC.Update enter (frame {F})", _diagUpdateFrames);
             base.Update(time);
             if (Status != Models.GameControlStatus.Ready || _visibility == null)
+            {
+                if (diag) _logger?.LogInformation("DIAG TC.Update skipped status={S}", Status);
                 return;
+            }
 
             var camPos2D = new Vector2(Camera.Instance.Position.X, Camera.Instance.Position.Y);
 
+            if (diag) _logger?.LogInformation("DIAG TC.Update visibility start");
             _visibility.Update(camPos2D);
+            if (diag) _logger?.LogInformation("DIAG TC.Update visibility done");
             _lightManager.UpdateActiveLights((float)time.ElapsedGameTime.TotalSeconds);
+            if (diag) _logger?.LogInformation("DIAG TC.Update lights done");
             _wind.Update(time);
+            if (diag) _logger?.LogInformation("DIAG TC.Update wind done");
             _renderer.Update(time);
+            if (diag) _logger?.LogInformation("DIAG TC.Update renderer done");
+            _diagUpdateFrames++;
         }
 
         public override void Draw(GameTime time)
@@ -209,8 +223,12 @@ namespace Client.Main.Controls
             if (!Visible || Status != Models.GameControlStatus.Ready || _renderer == null || _grassRenderer == null)
                 return;
 
+            bool diag = _diagDrawFrames < 3;
+            if (diag) _logger?.LogInformation("DIAG TC.Draw enter (frame {F})", _diagDrawFrames);
             FrameMetrics.Reset();
             _renderer.Draw(after: false);
+            if (diag) _logger?.LogInformation("DIAG TC.Draw renderer done");
+            _diagDrawFrames++;
 
             // Aggregate metrics from renderers
             FrameMetrics.DrawCalls = _renderer.DrawCalls + _grassRenderer.Flushes; // Grass flush is a draw call
