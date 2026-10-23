@@ -163,6 +163,7 @@ namespace Client.Main.Controls
             }
 
             // Initialize sub-systems in order of dependency
+            _logger?.LogInformation("TerrainControl: world {WorldIndex} creating renderers (thread {ThreadId})", WorldIndex, Environment.CurrentManagedThreadId);
             _lightManager = new TerrainLightManager(_data, this);
             _physics = new TerrainPhysics(_data, _lightManager);
             _wind = new WindSimulator(_data);
@@ -176,10 +177,13 @@ namespace Client.Main.Controls
             // Post-load processing
             _lightManager.CreateTerrainNormals();
             _lightManager.CreateFinalLightmap(LightDirection);
+            _logger?.LogInformation("TerrainControl: world {WorldIndex} creating height map texture", WorldIndex);
             _renderer.CreateHeightMapTexture();
+            _logger?.LogInformation("TerrainControl: world {WorldIndex} loading grass content", WorldIndex);
 
             // Reset grass to defaults before loading world-specific content
             _grassRenderer.LoadContent(WorldIndex);
+            _logger?.LogInformation("TerrainControl: world {WorldIndex} terrain ready", WorldIndex);
 
             Camera.Instance.AspectRatio = GraphicsDevice.Viewport.AspectRatio;
 

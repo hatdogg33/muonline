@@ -105,9 +105,7 @@ namespace Client.Main.Controls.Terrain
                 if (string.IsNullOrEmpty(path) || !File.Exists(path))
                     continue;
 
-                int textureIndex = t;
-                tasks.Add(TextureLoader.Instance.Prepare(path)
-                    .ContinueWith(_ => _terrainData.Textures[textureIndex] = TextureLoader.Instance.GetTexture2D(path)));
+                tasks.Add(TextureLoader.Instance.Prepare(path));
             }
 
             // Load lightmap or default to white
@@ -130,6 +128,15 @@ namespace Client.Main.Controls.Terrain
             {
                 _logger?.LogError(ex, "TerrainLoader: task failure for {Folder}", fullPathWorldFolder);
                 throw;
+            }
+
+            // Texture2D creation must happen on the graphics/game thread. Creating
+            // them inside the parallel tasks causes native GL crashes on Android.
+            for (int t = 0; t < textureMapFiles.Length; t++)
+            {
+                var path = textureMapFiles[t];
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                    _terrainData.Textures[t] = TextureLoader.Instance.GetTexture2D(path);
             }
 
             _logger?.LogInformation("TerrainLoader: loaded {Folder} (att={Att}, height={Height}, map={Map}, light={Light})",
