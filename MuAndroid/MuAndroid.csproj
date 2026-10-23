@@ -15,10 +15,10 @@
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <MonoGamePlatform>Android</MonoGamePlatform>
 
-    <RunAOTCompilation>false</RunAOTCompilation>
+    <RunAOTCompilation>true</RunAOTCompilation>
     <EnableLLVM>false</EnableLLVM>
     <!-- Work around Mono arm64 JIT assertion (mini-arm64.c:6036) -->
-    <AndroidUseInterpreter>true</AndroidUseInterpreter>
+    <AndroidUseInterpreter>false</AndroidUseInterpreter>
 
     <!-- Disable Fast Deployment for Debug builds -->
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>

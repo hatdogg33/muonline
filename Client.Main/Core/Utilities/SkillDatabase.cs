@@ -50,8 +50,15 @@ namespace Client.Main.Core.Utilities
         /// <summary>
         /// Gets skill name by skill ID.
         /// </summary>
-        public static string GetSkillName(int skillId) =>
-            GetSkillDefinition(skillId)?.Name ?? $"Unknown Skill {skillId}";
+        public static string GetSkillName(int skillId)
+        {
+            if (SkillNames.English.TryGetValue(skillId, out var englishName))
+            {
+                return englishName;
+            }
+
+            return GetSkillDefinition(skillId)?.Name ?? $"Unknown Skill {skillId}";
+        }
 
         /// <summary>
         /// Gets skill type (AREA/TARGET/SELF) by skill ID.
