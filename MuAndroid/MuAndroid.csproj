@@ -17,6 +17,8 @@
 
     <RunAOTCompilation>false</RunAOTCompilation>
     <EnableLLVM>false</EnableLLVM>
+    <!-- Work around Mono arm64 JIT assertion (mini-arm64.c:6036) -->
+    <AndroidUseInterpreter>true</AndroidUseInterpreter>
 
     <!-- Disable Fast Deployment for Debug builds -->
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
