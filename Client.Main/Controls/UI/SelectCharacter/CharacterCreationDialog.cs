@@ -144,6 +144,17 @@ namespace Client.Main.Controls.UI.SelectCharacter
             BringToFront();
         }
 
+        public void RequestNameInputFocus()
+        {
+            if (_nameInput == null)
+            {
+                return;
+            }
+
+            _nameInput.Focus();
+            TextBoxControl.FocusRequested?.Invoke(_nameInput);
+        }
+
         private void InitializeControls()
         {
             // Title

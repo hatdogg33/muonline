@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Client.Main.Controls.UI.Common
 {
@@ -15,6 +16,8 @@ namespace Client.Main.Controls.UI.Common
     /// </summary>
     public class TextBoxControl : GameControl
     {
+        private static readonly ILogger _logger = MuGame.AppLoggerFactory?.CreateLogger<TextBoxControl>();
+
         private StringBuilder _text = new StringBuilder();
         private bool _isFocused = false;
         private double _cursorBlinkTimer = 0;
@@ -178,6 +181,7 @@ namespace Client.Main.Controls.UI.Common
             _isFocused = true;
             _cursorVisible = true;
             _cursorBlinkTimer = 0;
+            _logger?.LogInformation("TextBoxControl: OnClick, hook={HasHook}", FocusRequested != null);
             FocusRequested?.Invoke(this);
             return base.OnClick();
         }

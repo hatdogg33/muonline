@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Client.Main;
 using Client.Main.Controls.UI.Common;
 using Microsoft.Xna.Framework.Input;
@@ -14,8 +16,14 @@ namespace MuAndroid
     {
         public static void Show(TextBoxControl box)
         {
+            var logger = MuGame.AppLoggerFactory?.CreateLogger("AndroidTextBoxInput");
             if (box == null)
+            {
+                logger?.LogWarning("Show called with null box");
                 return;
+            }
+
+            logger?.LogInformation("Show called (text length {Length})", box.Text?.Length ?? 0);
 
             Task.Run(async () =>
             {
@@ -25,6 +33,7 @@ namespace MuAndroid
                     defaultText: box.Text,
                     usePasswordMode: false);
 
+                logger?.LogInformation("KeyboardInput.Show returned {Length} chars", result?.Length ?? -1);
                 if (result != null)
                     MuGame.ScheduleOnMainThread(() => box.Text = result);
             });

@@ -889,6 +889,7 @@ namespace Client.Main.Scenes
             
             Controls.Add(_characterCreationDialog);
             _characterCreationDialog.BringToFront();
+            _characterCreationDialog.RequestNameInputFocus();
             Cursor?.BringToFront();
 
             // Disable interactions with world
