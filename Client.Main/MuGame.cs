@@ -85,6 +85,10 @@ namespace Client.Main
         private Vector2 _cachedEffectResolution;
         private Vector2 _lastValidMouseInBackBuffer;
 
+        private int _syntheticScroll;
+        private float _lastPinchDistance = -1f;
+        private const float PinchScrollSensitivity = 1.6f;
+
         // Public Instance Properties
         public BaseScene ActiveScene { get; private set; }
         public int Width => _graphics.PreferredBackBufferWidth;
@@ -646,6 +650,8 @@ namespace Client.Main
             Keyboard = Microsoft.Xna.Framework.Input.Keyboard.GetState();
             Touch = touchState;
 
+            UpdatePinchGesture(touchState);
+
             // Get back buffer and window dimensions
             int backBufferWidth = GraphicsDevice.PresentationParameters.BackBufferWidth;
             int backBufferHeight = GraphicsDevice.PresentationParameters.BackBufferHeight;
@@ -680,7 +686,7 @@ namespace Client.Main
             }
             else
             {
-                Mouse = mouseState;
+                Mouse = WithSyntheticScroll(mouseState, _syntheticScroll);
                 MouseInBackBuffer = mouseBackBufferPos;
                 _lastValidMouseInBackBuffer = mouseBackBufferPos;
             }
@@ -700,14 +706,14 @@ namespace Client.Main
                 UiMousePosition = virtualTouchPos; // Mouse follows finger
 
                 // Touch as left mouse button
-                var leftButtonState = (touch.State == TouchLocationState.Pressed || touch.State == TouchLocationState.Moved)
+                var leftButtonState = touchState.Count < 2 && (touch.State == TouchLocationState.Pressed || touch.State == TouchLocationState.Moved)
                     ? Microsoft.Xna.Framework.Input.ButtonState.Pressed
                     : Microsoft.Xna.Framework.Input.ButtonState.Released;
 
                 UiMouseState = new Microsoft.Xna.Framework.Input.MouseState(
                     virtualTouchPos.X,
                     virtualTouchPos.Y,
-                    0,
+                    _syntheticScroll,
                     leftButtonState,
                     Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released);
             }
@@ -724,7 +730,7 @@ namespace Client.Main
 
                     UiMouseState = new Microsoft.Xna.Framework.Input.MouseState(
                         UiMousePosition.X, UiMousePosition.Y,
-                        0,
+                        _syntheticScroll,
                         Microsoft.Xna.Framework.Input.ButtonState.Released,
                         Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released, Microsoft.Xna.Framework.Input.ButtonState.Released);
                 }
@@ -1146,6 +1152,50 @@ namespace Client.Main
             DisposeInstance();
             // Force process exit to avoid lingering background process
             Environment.Exit(0);
+        }
+
+        private void UpdatePinchGesture(TouchCollection touchState)
+        {
+            if (touchState.Count < 2)
+            {
+                _lastPinchDistance = -1f;
+                return;
+            }
+
+            var a = touchState[0].Position;
+            var b = touchState[1].Position;
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            float distance = MathF.Sqrt((dx * dx) + (dy * dy));
+
+            if (_lastPinchDistance >= 0f)
+            {
+                float delta = distance - _lastPinchDistance;
+                if (MathF.Abs(delta) > 0.01f)
+                {
+                    _syntheticScroll += (int)(delta * PinchScrollSensitivity);
+                }
+            }
+
+            _lastPinchDistance = distance;
+        }
+
+        private static MouseState WithSyntheticScroll(MouseState state, int syntheticScroll)
+        {
+            if (syntheticScroll == 0)
+            {
+                return state;
+            }
+
+            return new MouseState(
+                state.X,
+                state.Y,
+                state.ScrollWheelValue + syntheticScroll,
+                state.LeftButton,
+                state.MiddleButton,
+                state.RightButton,
+                state.XButton1,
+                state.XButton2);
         }
     }
 }
